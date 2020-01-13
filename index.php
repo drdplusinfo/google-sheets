@@ -64,18 +64,10 @@ $client = getClient();
 $service = new Google_Service_Sheets($client);
 
 // Prints the names and majors of students in a sample spreadsheet:
-// https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
-$spreadsheetId = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms';
-$range = 'Class Data!A2:E';
+// https://docs.google.com/spreadsheets/d/1nAokoR_U_DtDQvLWdIGpVoKLWcrsMcrTH9xU4yB6l4Q/edit
+$spreadsheetId = '1nAokoR_U_DtDQvLWdIGpVoKLWcrsMcrTH9xU4yB6l4Q';
+$range = 'A1:W5';
 $response = $service->spreadsheets_values->get($spreadsheetId, $range);
 $values = $response->getValues();
 
-if (empty($values)) {
-    print "No data found.\n";
-} else {
-    print "Name, Major:\n";
-    foreach ($values as $row) {
-        // Print columns A and E, which correspond to indices 0 and 4.
-        printf("%s, %s\n", $row[0], $row[4]);
-    }
-}
+print_r($values);
