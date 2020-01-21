@@ -13,7 +13,7 @@ function getClient()
 {
     $client = new Google_Client();
     $client->setApplicationName('Google Sheets API PHP Quickstart');
-    $client->setScopes(Google_Service_Sheets::SPREADSHEETS_READONLY);
+    $client->setScopes(Google_Service_Sheets::DRIVE_FILE);
     $client->setAuthConfig('credentials.json');
     $client->setAccessType('offline');
     $client->setPrompt('select_account consent');
@@ -63,11 +63,19 @@ function getClient()
 $client = getClient();
 $service = new Google_Service_Sheets($client);
 
+$newSheet = new Google_Service_Sheets_Spreadsheet();
+$createdSpreadSheet = $service->spreadsheets->create($newSheet, []);
+var_dump($createdSpreadSheet->getSpreadsheetId(), $newSheet->getSpreadsheetId());
+
+$sheet = new Google_Service_Sheets_Sheet();
+$sheet->setData(['foo','bar']);
+$createdSpreadSheet->setSheets($sheet);
+
 // Prints the names and majors of students in a sample spreadsheet:
 // https://docs.google.com/spreadsheets/d/1nAokoR_U_DtDQvLWdIGpVoKLWcrsMcrTH9xU4yB6l4Q/edit
-$spreadsheetId = '1nAokoR_U_DtDQvLWdIGpVoKLWcrsMcrTH9xU4yB6l4Q';
+$spreadsheetId = $createdSpreadSheet->getSpreadsheetId();
 $range = 'A1:W5';
 $response = $service->spreadsheets_values->get($spreadsheetId, $range);
 $values = $response->getValues();
 
-print_r($values);
+var_dump($values);
