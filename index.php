@@ -13,7 +13,7 @@ function getClient()
 {
     $client = new Google_Client();
     $client->setApplicationName('Google Sheets API PHP Quickstart');
-    $client->setScopes(Google_Service_Sheets::DRIVE_FILE);
+    $client->setScopes([Google_Service_Sheets::DRIVE_FILE]);
     $client->setAuthConfig('credentials.json');
     $client->setAccessType('offline');
     $client->setPrompt('select_account consent');
@@ -58,24 +58,51 @@ function getClient()
     return $client;
 }
 
-
 // Get the API client and construct the service object.
 $client = getClient();
-$service = new Google_Service_Sheets($client);
+
+$drive = new Google_Service_Drive($client);
+
+/** @var Google_Collection $files */
+$files = $drive->files->listFiles(['q' => "mimeType='application/vnd.google-apps.folder' and name='hokus pokus' and trashed=false"]);
+/** @var Google_Service_Drive_DriveFile $fileFromDrive */
+foreach ($files as $fileFromDrive) {
+    var_dump([
+        'name' => $fileFromDrive->getName(),
+        'mimeType' => $fileFromDrive->getMimeType(),
+        'id' => $fileFromDrive->getId(),
+    ]);
+}
+
+$parentId = '';
+if ($files->count() > 0) {
+    $files->rewind();
+    $parentId = $files->current()->getId();
+}
+
+$folder = new Google_Service_Drive_DriveFile();
+$folder->setName('dole');
+if ($parentId) {
+    $folder->setParents([$parentId]);
+}
+$folder->setMimeType('application/vnd.google-apps.folder');
+$created = $drive->files->create($folder);
+
+$sheets = new Google_Service_Sheets($client);
 
 $newSheet = new Google_Service_Sheets_Spreadsheet();
-$createdSpreadSheet = $service->spreadsheets->create($newSheet, []);
+$createdSpreadSheet = $sheets->spreadsheets->create($newSheet, []);
 var_dump($createdSpreadSheet->getSpreadsheetId(), $newSheet->getSpreadsheetId());
 
 $sheet = new Google_Service_Sheets_Sheet();
-$sheet->setData(['foo','bar']);
+$sheet->setData(['foo', 'bar']);
 $createdSpreadSheet->setSheets($sheet);
 
 // Prints the names and majors of students in a sample spreadsheet:
 // https://docs.google.com/spreadsheets/d/1nAokoR_U_DtDQvLWdIGpVoKLWcrsMcrTH9xU4yB6l4Q/edit
 $spreadsheetId = $createdSpreadSheet->getSpreadsheetId();
 $range = 'A1:W5';
-$response = $service->spreadsheets_values->get($spreadsheetId, $range);
+$response = $sheets->spreadsheets_values->get($spreadsheetId, $range);
 $values = $response->getValues();
 
 var_dump($values);
