@@ -90,18 +90,24 @@ $created = $drive->files->create($folder);
 
 $sheets = new Google_Service_Sheets($client);
 
-$newSheet = new Google_Service_Sheets_Spreadsheet();
-$createdSpreadSheet = $sheets->spreadsheets->create($newSheet, []);
-var_dump($createdSpreadSheet->getSpreadsheetId(), $newSheet->getSpreadsheetId());
+// $spreadsheet = new Google_Service_Sheets_Spreadsheet();
+// $spreadsheetProperties = new Google_Service_Sheets_SpreadsheetProperties();
+// $spreadsheetProperties->setTitle('Test of Google sheets ' . date(DATE_ATOM));
+// $spreadsheet->setProperties($spreadsheetProperties);
 
-$sheet = new Google_Service_Sheets_Sheet();
-$sheet->setData(['foo', 'bar']);
-$createdSpreadSheet->setSheets($sheet);
+// $createdSpreadSheet = $sheets->spreadsheets->create($spreadsheet);
+$createdSpreadSheet = $sheets->spreadsheets->get('1Z4Naw8-qTGeST4y-qooAbivLYaxAuyCyMR6_C6XAmdQ'); // TODO remove
+/** @var Google_Service_Sheets_Sheet $firstSheet */
+$firstSheet = current($createdSpreadSheet->getSheets());
 
-// Prints the names and majors of students in a sample spreadsheet:
-// https://docs.google.com/spreadsheets/d/1nAokoR_U_DtDQvLWdIGpVoKLWcrsMcrTH9xU4yB6l4Q/edit
 $spreadsheetId = $createdSpreadSheet->getSpreadsheetId();
-$range = 'A1:W5';
+$range = $firstSheet->getProperties()->getTitle();
+
+$valueRange = new Google_Service_Sheets_ValueRange();
+$valueRange->setValues([['co', 'to', 'je']]);
+$response = $sheets->spreadsheets_values->update($spreadsheetId, $range, $valueRange, ['valueInputOption' => 'USER_ENTERED']);
+var_dump($response);
+
 $response = $sheets->spreadsheets_values->get($spreadsheetId, $range);
 $values = $response->getValues();
 
