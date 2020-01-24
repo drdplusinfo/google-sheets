@@ -63,8 +63,12 @@ $client = getClient();
 
 $drive = new Google_Service_Drive($client);
 
+
+// GET DIRS OF SPECIFIC NAME
 /** @var Google_Collection $files */
-$files = $drive->files->listFiles(['q' => "mimeType='application/vnd.google-apps.folder' and name='hokus pokus' and trashed=false"]);
+$files = $drive->files->listFiles(
+    ['q' => "mimeType='application/vnd.google-apps.folder' and name='hokus pokus' and trashed=false"]
+);
 /** @var Google_Service_Drive_DriveFile $fileFromDrive */
 foreach ($files as $fileFromDrive) {
     var_dump([
@@ -113,10 +117,13 @@ $values = $response->getValues();
 
 var_dump($values);
 
-$file = $drive->files->get($spreadsheetId);
+// LINK TO EDIT IN BROWSER
+$file = $drive->files->get($spreadsheetId, ['fields' => 'webViewLink']);
 var_dump($file->getWebViewLink());
+
+// DOWNLOAD XLSX
 /** @var \GuzzleHttp\Psr7\Response $response */
-$response = $drive->files->export($spreadsheetId, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+/*$response = $drive->files->export($spreadsheetId, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 $body = $response->getBody();
 var_dump($body->getSize(), $body->isReadable());
 $body->rewind();
@@ -124,4 +131,4 @@ $content = '';
 while (!$body->eof()) {
     $content .= $body->read(1024);
 }
-file_put_contents(uniqid('GoogleSheet', true) . '.xlsx', $content);
+file_put_contents(uniqid('GoogleSheet', true) . '.xlsx', $content);*/
