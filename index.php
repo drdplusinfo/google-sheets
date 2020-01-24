@@ -112,3 +112,16 @@ $response = $sheets->spreadsheets_values->get($spreadsheetId, $range);
 $values = $response->getValues();
 
 var_dump($values);
+
+$file = $drive->files->get($spreadsheetId);
+var_dump($file->getWebViewLink());
+/** @var \GuzzleHttp\Psr7\Response $response */
+$response = $drive->files->export($spreadsheetId, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+$body = $response->getBody();
+var_dump($body->getSize(), $body->isReadable());
+$body->rewind();
+$content = '';
+while (!$body->eof()) {
+    $content .= $body->read(1024);
+}
+file_put_contents(uniqid('GoogleSheet', true) . '.xlsx', $content);
