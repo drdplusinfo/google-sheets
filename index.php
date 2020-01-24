@@ -63,7 +63,6 @@ $client = getClient();
 
 $drive = new Google_Service_Drive($client);
 
-
 // GET DIRS OF SPECIFIC NAME
 /** @var Google_Collection $files */
 $files = $drive->files->listFiles(
@@ -109,13 +108,59 @@ $range = $firstSheet->getProperties()->getTitle();
 
 $valueRange = new Google_Service_Sheets_ValueRange();
 $valueRange->setValues([['co', 'to', 'je']]);
-$response = $sheets->spreadsheets_values->update($spreadsheetId, $range, $valueRange, ['valueInputOption' => 'USER_ENTERED']);
-var_dump($response);
+$sheets->spreadsheets_values->update($spreadsheetId, $range, $valueRange, ['valueInputOption' => 'USER_ENTERED']);
 
 $response = $sheets->spreadsheets_values->get($spreadsheetId, $range);
 $values = $response->getValues();
 
 var_dump($values);
+
+$requests = [];
+// MAKE FIRST ROW BOLD AND CENTERED
+$repeatCellRequest = new Google_Service_Sheets_RepeatCellRequest();
+$repeatCellRequest->setFields("userEnteredFormat(textFormat,horizontalAlignment)");
+$repeatCellRequestRange = new Google_Service_Sheets_GridRange();
+$repeatCellRequestRange->setEndRowIndex(1);
+$repeatCellRequest->setRange($repeatCellRequestRange);
+$cell = new Google_Service_Sheets_CellData();
+$cellFormat = new Google_Service_Sheets_CellFormat();
+$cellFormat->setHorizontalAlignment("CENTER");
+$textFormat = new Google_Service_Sheets_TextFormat();
+$textFormat->setBold(true);
+$cell->setUserEnteredFormat($cellFormat);
+$repeatCellRequest->setCell($cell);
+$request = new Google_Service_Sheets_Request();
+$request->setRepeatCell($repeatCellRequest);
+$requests[] = $request;
+
+// PROTECTED RANGE - is NOT protected for the owner
+$protectedRangeRequest = new Google_Service_Sheets_AddProtectedRangeRequest();
+$protectedRange = new Google_Service_Sheets_ProtectedRange();
+$gridRange = new Google_Service_Sheets_GridRange();
+$gridRange->setStartRowIndex(0);
+$gridRange->setEndRowIndex(1);
+$protectedRange->setRange($gridRange);
+$protectedRange->setDescription("Na hlavičku nesahej");
+$protectedRangeRequest->setProtectedRange($protectedRange);
+$request = new Google_Service_Sheets_Request();
+$request->setAddProtectedRange($protectedRangeRequest);
+$requests[] = $request;
+
+// FREEZE FIRST ROW AS A HEADER
+$updateSheetPropertiesRequest = new Google_Service_Sheets_UpdateSheetPropertiesRequest();
+$sheetProperties = new Google_Service_Sheets_SheetProperties();
+$gridProperties = new Google_Service_Sheets_GridProperties();
+$gridProperties->setFrozenRowCount(1);
+$sheetProperties->setGridProperties($gridProperties);
+$updateSheetPropertiesRequest->setFields("gridProperties.frozenRowCount");
+$updateSheetPropertiesRequest->setProperties($sheetProperties);
+$request = new Google_Service_Sheets_Request();
+$request->setUpdateSheetProperties($updateSheetPropertiesRequest);
+$requests[] = $request;
+
+$update = new Google_Service_Sheets_BatchUpdateSpreadsheetRequest();
+$update->setRequests($requests);
+$batchUpdateResponse = $sheets->spreadsheets->batchUpdate($spreadsheetId, $update);
 
 // LINK TO EDIT IN BROWSER
 $file = $drive->files->get($spreadsheetId, ['fields' => 'webViewLink']);
