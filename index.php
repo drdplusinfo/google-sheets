@@ -170,7 +170,7 @@ var_dump($file->getWebViewLink());
 
 // DOWNLOAD XLSX
 /** @var \GuzzleHttp\Psr7\Response $response */
-/*$response = $drive->files->export($spreadsheetId, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+$response = $drive->files->export($spreadsheetId, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 $body = $response->getBody();
 var_dump($body->getSize(), $body->isReadable());
 $body->rewind();
@@ -178,4 +178,22 @@ $content = '';
 while (!$body->eof()) {
     $content .= $body->read(1024);
 }
-file_put_contents(uniqid('GoogleSheet', true) . '.xlsx', $content);*/
+$excelFileName = uniqid('GoogleSheet', true) . '.xlsx';
+file_put_contents($excelFileName, $content);
+
+// IMPORT XLSX
+$spreadSheetParents = $drive->files->get($spreadsheetId)->getParents();
+var_dump($spreadSheetParents);
+$uploadFile = new Google_Service_Drive_DriveFile();
+$uploadFile->setMimeType('application/vnd.google-apps.spreadsheet');
+// $uploadFile->setParents($spreadSheetDirParentId);
+$uploadFile->setName($excelFileName);
+$createdExcelToSheetsFile = $drive->files->create(
+    $uploadFile,
+    [
+        'data' => file_get_contents($excelFileName),
+        'uploadType' => 'multipart',
+        'fields' => 'webViewLink',
+    ]
+);
+var_dump("Excel-to-sheets {$createdExcelToSheetsFile->getWebViewLink()}");
